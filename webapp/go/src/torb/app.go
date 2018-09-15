@@ -929,11 +929,12 @@ func main() {
 		return nil
 	}, adminLoginRequired)
 	e.GET("/admin/api/reports/events/:id/sales", func(c echo.Context) error {
-		time.Sleep(time.Second * 5)
 		eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			return resError(c, "not_found", 404)
 		}
+
+		time.Sleep(time.Second * 5)
 
 		event, err := getEvent(eventID, -1)
 		if err != nil {
