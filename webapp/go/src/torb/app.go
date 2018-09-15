@@ -21,6 +21,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
+	_ "github.com/walf443/go-sql-tracer"
 )
 
 type User struct {
@@ -316,8 +317,17 @@ func main() {
 		os.Getenv("DB_DATABASE"),
 	)
 
+	var isDev bool
+	if os.Getenv("DEV") == "1" {
+		isDev = true
+	}
+
 	var err error
-	db, err = sql.Open("mysql", dsn)
+	if isDev {
+		db, err = sql.Open("mysql:trace", dsn)
+	} else {
+		db, err = sql.Open("mysql", dsn)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
