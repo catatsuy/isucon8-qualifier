@@ -18,3 +18,5 @@ fi
 mysql -uisucon torb -e 'ALTER TABLE reservations DROP KEY event_id_and_sheet_id_idx'
 gzip -dc "$DB_DIR/isucon8q-initial-dataset.sql.gz" | mysql -uisucon torb
 mysql -uisucon torb -e 'ALTER TABLE reservations ADD KEY event_id_and_sheet_id_idx (event_id, sheet_id)'
+mysql -uisucon torb -e 'ALTER TABLE reservations ADD KEY user_id_idx (user_id)'
+mysql -uisucon torb -e 'ALTER TABLE reservations ADD KEY event_id_idx_and_canceled_at_idx (event_id, canceled_at)'
