@@ -210,21 +210,6 @@ func getEvents(all bool) ([]*Event, error) {
 		events = append(events, &event)
 	}
 
-	rows, err = db.Query("SELECT * FROM sheets ORDER BY `rank`, num")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var sheets []Sheet
-	for rows.Next() {
-		var sheet Sheet
-		if err := rows.Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
-			return nil, err
-		}
-		sheets = append(sheets, sheet)
-	}
-
 	for i, event := range events {
 		event.Sheets = map[string]*Sheets{
 			"S": &Sheets{},
@@ -233,7 +218,17 @@ func getEvents(all bool) ([]*Event, error) {
 			"C": &Sheets{},
 		}
 
-		for _, sheet := range sheets {
+		rows, err := db.Query("SELECT * FROM sheets ORDER BY `rank`, num")
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var sheet Sheet
+			if err := rows.Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
+				return nil, err
+			}
 			event.Sheets[sheet.Rank].Price = event.Price + sheet.Price
 			event.Total++
 			event.Sheets[sheet.Rank].Total++
