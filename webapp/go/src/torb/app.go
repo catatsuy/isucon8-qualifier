@@ -672,7 +672,7 @@ func main() {
 		}
 
 		var sheets []Sheet
-		rows, err := db.Query("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ?", event.ID, params.Rank)
+		rows, err := db.Query("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND()", event.ID, params.Rank)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return resError(c, "sold_out", 409)
