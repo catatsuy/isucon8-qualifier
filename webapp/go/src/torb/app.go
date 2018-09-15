@@ -210,7 +210,6 @@ func getEvents(all bool) ([]*Event, error) {
 		events = append(events, &event)
 	}
 
-
 	rows, err = db.Query("SELECT * FROM sheets ORDER BY `rank`, num")
 	if err != nil {
 		return nil, err
@@ -225,6 +224,32 @@ func getEvents(all bool) ([]*Event, error) {
 		sheets = append(sheets, sheet)
 	}
 
+	reservations := make(map[int64]map[int64]Reservation)
+
+	eIDStrs := make([]string, 0, len(events))
+	for _, event := range events {
+		eIDStrs = append(eIDStrs, strconv.FormatInt(event.ID, 10))
+		reservations[event.ID] = make(map[int64]Reservation)
+	}
+
+	// for speed
+	rRows, err := db.Query("SELECT * FROM reservations WHERE event_id IN (" + strings.Join(eIDStrs, ",") + ") AND canceled_at IS NULL")
+	if err != nil {
+		return nil, err
+	}
+	defer rRows.Close()
+
+	var reservation Reservation
+	for rRows.Next() {
+		rRows.Scan(&reservation.ID, &reservation.EventID, &reservation.SheetID, &reservation.UserID, &reservation.ReservedAt, &reservation.CanceledAt)
+		r, ok := reservations[reservation.EventID][reservation.SheetID]
+		if ok && r.ReservedAt.Before(*reservation.ReservedAt) {
+			continue
+		} else {
+			reservations[reservation.EventID][reservation.SheetID] = reservation
+		}
+	}
+
 	for i, event := range events {
 		event.Sheets = map[string]*Sheets{
 			"S": &Sheets{},
@@ -233,31 +258,12 @@ func getEvents(all bool) ([]*Event, error) {
 			"C": &Sheets{},
 		}
 
-		rRows, err := db.Query("SELECT * FROM reservations WHERE event_id = ? AND canceled_at IS NULL", event.ID)
-		if err != nil {
-			return nil, err
-		}
-		defer rRows.Close()
-
-		reservations := make(map[int64]Reservation)
-
-		var reservation Reservation
-		for rRows.Next() {
-			rRows.Scan(&reservation.ID, &reservation.EventID, &reservation.SheetID, &reservation.UserID, &reservation.ReservedAt, &reservation.CanceledAt)
-			r, ok := reservations[reservation.SheetID]
-			if ok && r.ReservedAt.Before(*reservation.ReservedAt) {
-				continue
-			} else {
-				reservations[reservation.SheetID] = reservation
-			}
-		}
-
 		for _, sheet := range sheets {
 			event.Sheets[sheet.Rank].Price = event.Price + sheet.Price
 			event.Total++
 			event.Sheets[sheet.Rank].Total++
 
-			r, ok := reservations[sheet.ID]
+			r, ok := reservations[event.ID][sheet.ID]
 
 			if ok {
 				sheet.Mine = false
