@@ -210,6 +210,21 @@ func getEvents(all bool) ([]*Event, error) {
 		events = append(events, &event)
 	}
 
+
+	rows, err = db.Query("SELECT * FROM sheets ORDER BY `rank`, num")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var sheets []Sheet
+	for rows.Next() {
+		var sheet Sheet
+		if err := rows.Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
+			return nil, err
+		}
+		sheets = append(sheets, sheet)
+	}
+
 	for i, event := range events {
 		event.Sheets = map[string]*Sheets{
 			"S": &Sheets{},
@@ -217,12 +232,6 @@ func getEvents(all bool) ([]*Event, error) {
 			"B": &Sheets{},
 			"C": &Sheets{},
 		}
-
-		rows, err := db.Query("SELECT * FROM sheets ORDER BY `rank`, num")
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
 
 		rRows, err := db.Query("SELECT * FROM reservations WHERE event_id = ? AND canceled_at IS NULL", event.ID)
 		if err != nil {
@@ -243,11 +252,7 @@ func getEvents(all bool) ([]*Event, error) {
 			}
 		}
 
-		for rows.Next() {
-			var sheet Sheet
-			if err := rows.Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
-				return nil, err
-			}
+		for _, sheet := range sheets {
 			event.Sheets[sheet.Rank].Price = event.Price + sheet.Price
 			event.Total++
 			event.Sheets[sheet.Rank].Total++
@@ -682,7 +687,8 @@ func main() {
 			return err
 		}
 
-		event, err := getEvent(eventID, user.ID)
+		var event Event
+		err = db.QueryRow("SELECT * FROM events WHERE id = ?", eventID).Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return resError(c, "invalid_event", 404)
@@ -750,7 +756,8 @@ func main() {
 			return err
 		}
 
-		event, err := getEvent(eventID, user.ID)
+		var event Event
+		err = db.QueryRow("SELECT * FROM events WHERE id = ?", eventID).Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return resError(c, "invalid_event", 404)
@@ -957,6 +964,8 @@ func main() {
 		if err != nil {
 			return resError(c, "not_found", 404)
 		}
+
+		time.Sleep(time.Second * 5)
 
 		event, err := getEvent(eventID, -1)
 		if err != nil {
