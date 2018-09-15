@@ -708,16 +708,24 @@ func main() {
 			return resError(c, "invalid_rank", 400)
 		}
 
-		var sheet Sheet
-		var reservationID int64
-		for {
-			if err := db.QueryRow("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1", event.ID, params.Rank).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
-				if err == sql.ErrNoRows {
-					return resError(c, "sold_out", 409)
-				}
+		var sheets []Sheet
+		rows, err := db.Query("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND()", event.ID, params.Rank)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return resError(c, "sold_out", 409)
+			} else {
 				return err
 			}
+		}
+		for rows.Next() {
+			var sheet Sheet
+			rows.Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price)
+			sheets = append(sheets, sheet)
+		}
 
+		var reservedSheet Sheet
+		var reservationID int64
+		for _, sheet := range sheets {
 			tx, err := db.Begin()
 			if err != nil {
 				return err
@@ -741,12 +749,13 @@ func main() {
 				continue
 			}
 
+			reservedSheet = sheet
 			break
 		}
 		return c.JSON(202, echo.Map{
 			"id":         reservationID,
 			"sheet_rank": params.Rank,
-			"sheet_num":  sheet.Num,
+			"sheet_num":  reservedSheet.Num,
 		})
 	}, loginRequired)
 	e.DELETE("/api/events/:id/sheets/:rank/:num/reservation", func(c echo.Context) error {
@@ -784,7 +793,6 @@ func main() {
 			}
 			return err
 		}
-
 		tx, err := db.Begin()
 		if err != nil {
 			return err
