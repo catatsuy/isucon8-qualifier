@@ -1,0 +1,1 @@
+{"version":"0.34","name":"Server::Starter","target":"Server::Starter","pathname":"K/KA/KAZUHO/Server-Starter-0.34.tar.gz","dist":"Server-Starter-0.34","provides":{"Server::Starter::Guard":{"file":"lib/Server/Starter/Guard.pm"},"Server::Starter":{"file":"lib/Server/Starter.pm","version":"0.34"}}}

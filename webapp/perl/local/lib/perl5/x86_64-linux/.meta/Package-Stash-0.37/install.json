@@ -1,0 +1,1 @@
+{"name":"Package::Stash","version":"0.37","pathname":"D/DO/DOY/Package-Stash-0.37.tar.gz","target":"Package::Stash","provides":{"Package::Stash::PP":{"file":"lib/Package/Stash/PP.pm","version":"0.37"},"Package::Stash":{"file":"lib/Package/Stash.pm","version":"0.37"}},"dist":"Package-Stash-0.37"}

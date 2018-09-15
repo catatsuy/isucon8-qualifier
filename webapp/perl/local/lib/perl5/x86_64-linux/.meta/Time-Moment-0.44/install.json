@@ -1,0 +1,1 @@
+{"name":"Time::Moment","version":0.44,"target":"Time::Moment","pathname":"C/CH/CHANSEN/Time-Moment-0.44.tar.gz","dist":"Time-Moment-0.44","provides":{"Time::Moment::Adjusters":{"file":"lib/Time/Moment/Adjusters.pm","version":0.44},"Time::Moment":{"version":0.44,"file":"lib/Time/Moment.pm"}}}

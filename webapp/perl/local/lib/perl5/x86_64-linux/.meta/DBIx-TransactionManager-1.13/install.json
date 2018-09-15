@@ -1,0 +1,1 @@
+{"dist":"DBIx-TransactionManager-1.13","provides":{"DBIx::TransactionManager":{"version":1.13,"file":"lib/DBIx/TransactionManager.pm"},"DBIx::TransactionManager::ScopeGuard":{"file":"lib/DBIx/TransactionManager.pm","version":1.13}},"name":"DBIx::TransactionManager","version":1.13,"target":"DBIx::TransactionManager","pathname":"N/NE/NEKOKAK/DBIx-TransactionManager-1.13.tar.gz"}
