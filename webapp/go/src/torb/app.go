@@ -237,7 +237,8 @@ func getEvents(all bool) ([]*Event, error) {
 			rRows.Scan(&reservation.ID, &reservation.EventID, &reservation.SheetID, &reservation.UserID, &reservation.ReservedAt, &reservation.CanceledAt)
 			r, ok := reservations[reservation.SheetID]
 			if ok && r.ReservedAt.Before(*reservation.ReservedAt) {
-				continue
+				//continue
+				reservations[reservation.SheetID] = reservation
 			} else {
 				reservations[reservation.SheetID] = reservation
 			}
